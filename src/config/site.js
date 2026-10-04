@@ -16,8 +16,8 @@ export const SITE = {
   // you launch on). While empty: BUY buttons scroll to the token section.
   buyUrl: '',
 
-  xHandle: '@BULLSHIT_XSOL',
-  xUrl: 'https://x.com/BULLSHIT_XSOL',
+  xHandle: '@BullShit_Solana',
+  xUrl: 'https://x.com/BullShit_Solana',
 };
 
 export const CA_PLACEHOLDER = '[CA COMING SOON]';
