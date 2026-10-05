@@ -8,6 +8,14 @@ export function XGlyph({ size = 18 }) {
   );
 }
 
+export function TelegramGlyph({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M21 4L3 11.2l5.6 2 2 6 3-3.6 4.8 3.4z" fill="currentColor" />
+    </svg>
+  );
+}
+
 /** Primary CTA. Points at the official buy link once configured,
  *  otherwise scrolls to the token section (where the CA placeholder lives). */
 export function BuyButton({ children = 'BUY $BULLSHIT', className = '' }) {
@@ -43,6 +51,21 @@ export function XButton({ children, className = '', big = false }) {
       data-text={children}
     >
       <XGlyph />
+      <span>{children}</span>
+    </a>
+  );
+}
+
+export function TelegramButton({ children = 'JOIN TELEGRAM', className = '', big = false }) {
+  return (
+    <a
+      className={`btn btn--x ${big ? 'btn--big' : ''} ${className}`.trim()}
+      href={SITE.telegramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-text={children}
+    >
+      <TelegramGlyph />
       <span>{children}</span>
     </a>
   );

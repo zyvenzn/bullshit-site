@@ -18,6 +18,9 @@ export const SITE = {
 
   xHandle: '@BullShit_Solana',
   xUrl: 'https://x.com/BullShit_Solana',
+
+  // Official community group.
+  telegramUrl: 'https://t.me/bullshit_sol',
 };
 
 export const CA_PLACEHOLDER = '[CA COMING SOON]';

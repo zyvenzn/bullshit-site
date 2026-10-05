@@ -18,6 +18,9 @@ export default function Footer() {
           <a href={SITE.xUrl} target="_blank" rel="noopener noreferrer">
             X
           </a>
+          <a href={SITE.telegramUrl} target="_blank" rel="noopener noreferrer">
+            Telegram
+          </a>
           <a href={buyHref} {...buyExternal}>
             Buy
           </a>

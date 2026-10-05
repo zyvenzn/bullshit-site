@@ -1,7 +1,7 @@
 import banner from '../assets/banner.webp';
 import Candles from './Candles.jsx';
 import Reveal from './Reveal.jsx';
-import { BuyButton, XButton } from './Buttons.jsx';
+import { BuyButton, TelegramButton, XButton } from './Buttons.jsx';
 
 export default function BuySection() {
   return (
@@ -21,6 +21,7 @@ export default function BuySection() {
           <div className="cta-row cta-row--center">
             <BuyButton />
             <XButton>FOLLOW ON X</XButton>
+            <TelegramButton>JOIN TELEGRAM</TelegramButton>
           </div>
         </Reveal>
 

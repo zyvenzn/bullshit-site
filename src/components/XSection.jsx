@@ -1,6 +1,6 @@
 import avatar from '../assets/bull-avatar.webp';
 import Reveal from './Reveal.jsx';
-import { XButton } from './Buttons.jsx';
+import { TelegramButton, XButton } from './Buttons.jsx';
 import { SITE } from '../config/site.js';
 
 // Illustrative posts written for this page. They are NOT real tweets, and
@@ -84,7 +84,10 @@ export default function XSection() {
             ON <span className="red">X</span>
           </h2>
           <p className="lead">Where the bullshit happens.</p>
-          <XButton big>FOLLOW {SITE.xHandle}</XButton>
+          <div className="cta-row">
+            <XButton big>FOLLOW {SITE.xHandle}</XButton>
+            <TelegramButton big>JOIN TELEGRAM</TelegramButton>
+          </div>
           <p className="fine">Illustrative posts written for this page. Not real tweets, and no stats on purpose.</p>
         </Reveal>
 

@@ -53,3 +53,8 @@ Paste or point any AI at this file before asking it to continue the work.
 3. Ask community to draw the bull in costumes (cowboy, astronaut, CEO, goblin...), repost the best, add them to the site gallery.
 4. Open Telegram only when owner can moderate (anti-scam: hold new members, block links, pinned "admins never DM first").
 5. Before launch: decide dev buy %, prepare wallet, write a transparent launch announcement (dev buy %, wallet address, disclaimer), then fill `contractAddress` and `buyUrl` in site.js.
+
+
+## Update 2026-10-06
+- Official Telegram group: https://t.me/bullshit_sol (set in `src/config/site.js` as `telegramUrl`; shown in X section, Buy section and footer).
+- Telegram moderation bot: @BullShitGuard_Bot, repo https://github.com/zyvenzn/BullShitGuard (runs on Railway, COEXIST_MODE with Rose).
