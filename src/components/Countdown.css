@@ -1,0 +1,8 @@
+.cd{padding:28px 16px;text-align:center;background:#0a0605;border-block:2px solid #8c0f1d}
+.cd__eyebrow{font:12px 'Press Start 2P',monospace;color:#ff2a3d;margin:0 0 16px}
+.cd__row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.cd__box{min-width:72px;padding:12px 8px;border:2px solid #ff2a3d;background:#150b09}
+.cd__num{display:block;font:44px 'Bebas Neue',sans-serif;color:#f1e8d6;line-height:1}
+.cd__lbl{font:11px 'Space Mono',monospace;color:#ff2a3d}
+.cd__done{font:20px 'Bebas Neue',sans-serif;color:#f1e8d6;margin:0}
+.cd__note{font:11px 'Space Mono',monospace;color:#f1e8d6;opacity:.6;margin:14px 0 0}
