@@ -1,5 +1,6 @@
 import Nav from './components/Nav.jsx';
 import Hero from './components/Hero.jsx';
+import Countdown from './components/Countdown.jsx';
 import TickerMarquee from './components/TickerMarquee.jsx';
 import WhatSection from './components/WhatSection.jsx';
 import PhilosophyCards from './components/PhilosophyCards.jsx';
