@@ -21,6 +21,7 @@ export default function App() {
       <Nav />
       <main>
         <Hero />
+        <Countdown />
         <TickerMarquee />
         <WhatSection />
         <PhilosophyCards />
