@@ -7,6 +7,8 @@ export const SITE = {
   ticker: '$BULLSHIT',
   network: 'Solana',
 
+  // 21:00 WIB = 14:00 UTC, Minggu 1 Nov 2026
+  launchAt: '2026-11-01T14:00:00Z',
   // Paste the real Solana contract address here once it exists.
   // While empty: the token section shows "[CA COMING SOON]"
   // and the COPY CA button stays disabled.
