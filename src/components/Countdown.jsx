@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { SITE } from '../config/site.js';
-import './countdown.css';
+import './Countdown.css';
 
 const pad = (n) => String(n).padStart(2, '0');
 
