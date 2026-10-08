@@ -29,7 +29,7 @@ export default function Countdown() {
 
   return (
     <section className="cd" aria-label="Launch countdown">
-      <p className="cd__eyebrow">LAUNCH · 1 NOV 2026 · 21:00 WIB</p>
+      <p className="cd__eyebrow">LAUNCH · 1 NOV 2026 · 14:00 UTC</p>
       {left.done ? (
         <p className="cd__done">THE TIME HAS COME. WATCH X FOR THE OFFICIAL LAUNCH.</p>
       ) : (
