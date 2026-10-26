@@ -5,6 +5,7 @@ import TickerMarquee from './components/TickerMarquee.jsx';
 import WhatSection from './components/WhatSection.jsx';
 import PhilosophyCards from './components/PhilosophyCards.jsx';
 import LoreSection from './components/LoreSection.jsx';
+import Journey from './components/Journey.jsx';
 import MemeGallery from './components/MemeGallery.jsx';
 import XSection from './components/XSection.jsx';
 import TokenSection from './components/TokenSection.jsx';
@@ -26,6 +27,7 @@ export default function App() {
         <WhatSection />
         <PhilosophyCards />
         <LoreSection />
+        <Journey />
         <MemeGallery />
         <XSection />
         <TokenSection />

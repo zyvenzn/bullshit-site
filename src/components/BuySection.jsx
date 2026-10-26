@@ -29,10 +29,10 @@ export default function BuySection() {
           <img
             src={banner}
             width="1600"
-            height="533"
+            height="893"
             loading="lazy"
             decoding="async"
-            alt="BULLSHIT screaming in front of a collapsing red chart"
+            alt="BULL the robot bull watching wallets and transactions on holographic screens"
           />
         </figure>
       </div>

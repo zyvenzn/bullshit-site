@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import bull from '../assets/bull.webp';
+import bull from '../assets/bull-old.webp';
 import Reveal from './Reveal.jsx';
 import { useScrollProgress } from '../hooks.js';
 

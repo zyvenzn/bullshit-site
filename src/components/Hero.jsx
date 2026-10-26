@@ -34,7 +34,7 @@ export default function Hero() {
   return (
     <section id="hero" className="hero" ref={ref} aria-labelledby="hero-title">
       <div className="hero__copy">
-        <p className="eyebrow">THE MARKET&apos;S STUPIDEST BULL</p>
+        <p className="eyebrow">THE STUPID BULL. UPGRADED.</p>
 
         <h1 id="hero-title" className="hero__title" aria-label="BULLSHIT">
           <span className="glitch" data-text="BULL" aria-hidden="true">
@@ -50,7 +50,7 @@ export default function Hero() {
           <br />
           JUST BULLSHIT.
         </p>
-        <p className="hero__sub">A stupid bull living in a market full of smart people.</p>
+        <p className="hero__sub">He used to know nothing. Now he sees every wallet. Still bullshit.</p>
 
         <div className="cta-row">
           <BuyButton />
@@ -110,7 +110,7 @@ export default function Hero() {
                 src={bull}
                 width="720"
                 height="720"
-                alt="BULLSHIT, the stupid bull with a toilet paper roll on his head"
+                alt="BULL, the robot bull with glowing red eyes and a scrap of toilet paper still stuck on his horn"
                 fetchpriority="high"
                 decoding="async"
               />

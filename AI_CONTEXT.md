@@ -58,3 +58,10 @@ Paste or point any AI at this file before asking it to continue the work.
 ## Update 2026-10-06
 - Official Telegram group: https://t.me/bullshit_sol (set in `src/config/site.js` as `telegramUrl`; shown in X section, Buy section and footer).
 - Telegram moderation bot: @BullShitGuard_Bot, repo https://github.com/zyvenzn/BullShitGuard (runs on Railway, COEXIST_MODE with Rose).
+
+
+## Update 2026-10-26: new lore (the mascot changed)
+- The mascot above (the stupid bull) is now the "BEFORE". Lore: at exactly 00:00 a beam of light absorbed the dumb bull and turned him into BULL, a robot bull.
+- New personality: cynical, arrogant, mocks bad creators. He can spy on trader wallets and see their full transaction history. Jokes target patterns and data, never named real people.
+- Site: Chapter 01 (Lore) and "What" keep the old bull (`src/assets/bull-old.webp`). Hero, buy banner, avatar, og.jpg and favicon use the new robot art. New `Journey` section (Chapter 02, "THE UPGRADE") shows before, 00:00, and now.
+- Planned but NOT built: a token/wallet scanner page ("Bull sees every wallet"). Do not claim it exists anywhere until it does.
