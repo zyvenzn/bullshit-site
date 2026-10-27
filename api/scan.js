@@ -4,6 +4,63 @@ import { analyze, extractCreatorMints, isValidMint, toPairs } from './_lib/analy
 
 const HEADERS = { accept: 'application/json', 'user-agent': 'bullshit-detector/1.0' };
 
+// TEMPORARY diagnostics: /api/scan?ca=...&debug=2 tries candidate sources for the creator's
+// token history and reports status + shape only. Remove once a source is chosen.
+async function probeCreator(creator) {
+  const out = {};
+  const timed = async (name, url, init, summarize) => {
+    const t0 = Date.now();
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 5000);
+    try {
+      const r = await fetch(url, { ...init, signal: ctl.signal });
+      const text = await r.text();
+      let extra = null;
+      try {
+        extra = summarize ? summarize(JSON.parse(text)) : null;
+      } catch {
+        extra = null;
+      }
+      out[name] = { status: r.status, ms: Date.now() - t0, bytes: text.length, head: text.slice(0, 220), ...(extra ? { summary: extra } : {}) };
+    } catch (e) {
+      out[name] = { error: String(e?.message || e).slice(0, 120), ms: Date.now() - t0 };
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  const key = process.env.HELIUS_API_KEY;
+  const jobs = [
+    timed('pumpfun', `https://frontend-api-v3.pump.fun/coins/user-created-coins/${creator}?offset=0&limit=50&includeNsfw=true`, { headers: HEADERS }, (j) => ({
+      isArray: Array.isArray(j),
+      count: Array.isArray(j) ? j.length : j?.coins?.length ?? null,
+      keys: Array.isArray(j) ? Object.keys(j[0] || {}).slice(0, 12) : Object.keys(j || {}).slice(0, 12),
+    })),
+    timed(
+      'solanaRpc',
+      'https://api.mainnet-beta.solana.com',
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getSignaturesForAddress', params: [creator, { limit: 20 }] }) },
+      (j) => ({ signatures: j?.result?.length ?? null, error: j?.error?.message ?? null })
+    ),
+  ];
+  if (key) {
+    jobs.push(
+      timed('helius', `https://api.helius.xyz/v0/addresses/${creator}/transactions?api-key=${key}&limit=50`, { headers: HEADERS }, (j) => {
+        const types = {};
+        const sources = {};
+        for (const x of Array.isArray(j) ? j : []) {
+          types[x?.type] = (types[x?.type] || 0) + 1;
+          sources[x?.source] = (sources[x?.source] || 0) + 1;
+        }
+        return { count: Array.isArray(j) ? j.length : null, types, sources };
+      })
+    );
+  } else {
+    out.helius = 'no HELIUS_API_KEY set';
+  }
+  await Promise.all(jobs);
+  return out;
+}
+
 async function getJson(url, ms = 4500) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
@@ -28,10 +85,13 @@ export default async function handler(req, res) {
 
   let ca = '';
   let debug = false;
+  let probe = false;
   try {
     const q = new URL(req.url, 'http://x').searchParams;
     ca = String(req.query?.ca ?? q.get('ca') ?? '').trim();
-    debug = (req.query?.debug ?? q.get('debug')) === '1';
+    const dv = req.query?.debug ?? q.get('debug');
+    debug = dv === '1' || dv === '2';
+    probe = dv === '2';
   } catch {
     ca = '';
   }
@@ -68,6 +128,7 @@ export default async function handler(req, res) {
       },
       mintsFound: mints.length,
     };
+    if (probe && result.creator?.address) result.debug.probe = await probeCreator(result.creator.address);
     return send(200, result);
   }
   return send(200, result, 'public, s-maxage=30, stale-while-revalidate=120');

@@ -294,7 +294,7 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
   }
 
   // RugCheck's own danger flags that we did not already count
-  const covered = /holder|liquidity|\blp\b/i; // already scored above, do not count twice
+  const covered = /holder|ownership|liquidity|\blp\b/i; // already scored above, do not count twice
   const dangers = rugRisks.filter((r) => r.level === 'danger' && !covered.test(r.name));
   if (dangers.length) {
     add('rugcheck', 'warn', clamp(dangers.length * 5, 0, 15), `RugCheck flags: ${dangers.map((d) => d.name).join(', ')}.`, [
