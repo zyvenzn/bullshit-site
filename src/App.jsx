@@ -6,6 +6,7 @@ import WhatSection from './components/WhatSection.jsx';
 import PhilosophyCards from './components/PhilosophyCards.jsx';
 import LoreSection from './components/LoreSection.jsx';
 import Journey from './components/Journey.jsx';
+import ScanPage from './components/ScanPage.jsx';
 import MemeGallery from './components/MemeGallery.jsx';
 import XSection from './components/XSection.jsx';
 import TokenSection from './components/TokenSection.jsx';
@@ -13,7 +14,10 @@ import BuySection from './components/BuySection.jsx';
 import Footer from './components/Footer.jsx';
 import CursorSparks from './components/CursorSparks.jsx';
 
+const isScan = typeof window !== 'undefined' && /^\/scan\/?$/.test(window.location.pathname);
+
 export default function App() {
+  if (isScan) return <ScanPage />;
   return (
     <>
       <a className="skip" href="#what">

@@ -7,6 +7,7 @@ const LINKS = [
   { href: '#multiverse', label: 'MEMES' },
   { href: '#x', label: 'X' },
   { href: '#token', label: 'TOKEN' },
+  { href: '/scan', label: 'SCAN' },
 ];
 
 export default function Nav() {

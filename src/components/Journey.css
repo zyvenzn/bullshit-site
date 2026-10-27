@@ -18,3 +18,5 @@
   .journey__track{grid-template-columns:repeat(3,1fr);gap:36px}
   .jstep:not(:last-child)::after{content:'\2192';position:absolute;top:calc(50% - 90px);right:-30px;transform:translateY(-50%);font:400 1.6rem/1 var(--pixel);color:var(--red)}
 }
+.jstep__cta{display:inline-block;margin-top:16px;padding:12px 16px;background:var(--red);color:var(--bg);font:400 1.15rem/1 var(--display);letter-spacing:.06em;text-decoration:none;box-shadow:4px 4px 0 var(--crimson)}
+.jstep__cta:hover{transform:translate(-2px,-2px)}

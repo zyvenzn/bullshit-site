@@ -73,6 +73,11 @@ export default function Journey() {
                 ))}
               </p>
               {s.quote && <p className="jstep__quote">{s.quote}</p>}
+              {s.id === 'now' && (
+                <a className="jstep__cta" href="/scan">
+                  MAKE BULL JUDGE A TOKEN &rarr;
+                </a>
+              )}
             </Reveal>
           ))}
         </ol>
