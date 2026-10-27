@@ -84,7 +84,7 @@ function topHolders(rug, excluded, creator) {
   const sum = rows.reduce((a, r) => a + (r.pct || 0), 0);
   if (rows.length >= 5 && sum > 0 && sum <= 1.05) rows = rows.map((r) => ({ ...r, pct: (r.pct || 0) * 100 }));
   rows = rows.filter((r) => r.pct !== null && r.address);
-  const real = rows.filter((r) => !excluded.has(r.address) && !excluded.has(r.account));
+  const real = rows.filter((r) => r.pct >= 0.01 && !excluded.has(r.address) && !excluded.has(r.account));
   const top = real.slice(0, 10).map((r) => ({
     address: r.address,
     pct: Math.round(r.pct * 100) / 100,
@@ -96,7 +96,7 @@ function topHolders(rug, excluded, creator) {
 }
 
 const GRADES = [
-  [20, 'ALMOST CLEAN', [
+  [20, 'NO STRUCTURAL RED FLAGS', [
     "Clean. Rare. Bull is almost impressed. Almost.",
     "Bull found nothing. He is suspicious of that, too.",
   ]],
@@ -135,6 +135,7 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
   const holders = topHolders(rug, excluded, creator);
   const mints = extractCreatorMints(rug, ca);
   const prev = previousTokens(mints, creatorPairs);
+  const creatorTokensAvailable = !!rug && rug.creatorTokens !== undefined && rug.creatorTokens !== null;
 
   const createdAt = num(pair?.pairCreatedAt);
   const market = haveDex
@@ -151,6 +152,7 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
         ageHours: createdAt ? Math.max(0, (now - createdAt) / 36e5) : null,
         dex: str(pair.dexId),
         url: str(pair.url),
+        image: str(pair?.info?.imageUrl),
       }
     : null;
 
@@ -169,6 +171,7 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
 
   // ── scoring ─────────────────────────────────────────────
   let score = 0;
+  let dead = false;
   const findings = [];
   const add = (id, level, points, text, bullLines) => {
     score += points;
@@ -226,7 +229,12 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
   }
 
   if (market?.liquidityUsd !== null && market?.liquidityUsd !== undefined) {
-    if (market.liquidityUsd < 5000) {
+    if (market.liquidityUsd < 100) {
+      dead = true;
+      add('liq', 'bad', 30, 'Liquidity is basically zero. This token looks dead or untradeable.', [
+        'Bull checked the pulse. There is none.',
+      ]);
+    } else if (market.liquidityUsd < 5000) {
       add('liq', 'bad', 10, `Liquidity is only $${Math.round(market.liquidityUsd).toLocaleString('en-US')}.`, [
         'You can get in. Getting out is a different story.',
       ]);
@@ -237,8 +245,29 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
     }
   }
 
-  if (market?.ageHours !== null && market?.ageHours !== undefined && market.ageHours < 1) {
-    add('age', 'warn', 5, 'This pair is under 1 hour old.', ['Brand new. Nobody knows anything yet, including Bull.']);
+  if (market?.ageHours !== null && market?.ageHours !== undefined) {
+    if (market.ageHours < 1) {
+      add('age', 'warn', 10, 'This pair is under 1 hour old.', ['Brand new. Nobody knows anything yet, including Bull.']);
+    } else if (market.ageHours < 24) {
+      add('age', 'warn', 5, 'This pair is under 24 hours old.', ['Young. Bull does not trust anything younger than a day.']);
+    }
+  }
+
+  const c24 = market?.change24h;
+  if (c24 !== null && c24 !== undefined) {
+    if (c24 <= -80) {
+      add('dump', 'bad', 10, `Price is down ${Math.abs(Math.round(c24))}% in 24h.`, ['That is not a dip. That is a floor falling out.']);
+    } else if (Math.abs(c24) >= 500) {
+      add('swing', 'warn', 15, `Price moved ${c24 > 0 ? '+' : ''}${Math.round(c24)}% in 24h.`, [
+        'Charts like this age badly. Bull keeps the receipts.',
+      ]);
+    }
+  }
+
+  const bu = market?.buys24h;
+  const se = market?.sells24h;
+  if (bu !== null && bu !== undefined && se !== null && se !== undefined && bu + se >= 50 && se > bu * 1.5) {
+    add('sells', 'warn', 5, `Sells outnumber buys ${se} to ${bu} in the last 24h.`, ['More people leaving than arriving. Bull notices.']);
   }
 
   // creator history
@@ -254,11 +283,19 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
       ]);
     } else add('history', 'ok', 0, `Creator launched ${prev.total} earlier token${prev.total > 1 ? 's' : ''}. None look dead.`);
   } else if (haveRug && !mints.length) {
-    findings.push({ id: 'history', level: 'info', text: 'No earlier tokens found for this creator.', bull: null });
+    findings.push({
+      id: 'history',
+      level: 'info',
+      text: creatorTokensAvailable
+        ? 'No earlier tokens found for this creator.'
+        : 'Creator history was not provided by the data source, so Bull could not check it.',
+      bull: null,
+    });
   }
 
   // RugCheck's own danger flags that we did not already count
-  const dangers = rugRisks.filter((r) => r.level === 'danger');
+  const covered = /holder|liquidity|\blp\b/i; // already scored above, do not count twice
+  const dangers = rugRisks.filter((r) => r.level === 'danger' && !covered.test(r.name));
   if (dangers.length) {
     add('rugcheck', 'warn', clamp(dangers.length * 5, 0, 15), `RugCheck flags: ${dangers.map((d) => d.name).join(', ')}.`, [
       'Even the other detectors are nervous.',
@@ -267,6 +304,7 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
 
   score = clamp(Math.round(score), 0, 100);
   if (rugged) score = 100;
+  if (dead) score = Math.max(score, 95);
   const [, grade, verdicts] = GRADES.find(([max]) => score < max);
 
   const order = { bad: 0, warn: 1, info: 2, ok: 3 };
@@ -279,11 +317,12 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
     level: score,
     grade,
     verdict: pick(verdicts, seed),
+    note: 'A clean structure is not a good investment. Prices can collapse with no warning.',
     confidence: haveDex && haveRug ? 'full' : 'partial',
     market,
     security: { mintActive, freezeActive, lpLockedPct, rugged, totalHolders },
     holders: { top: holders.top, top10Pct: holders.top10Pct },
-    creator: creator ? { address: creator, holdsPct: creatorHolds, previous: prev } : null,
+    creator: creator ? { address: creator, holdsPct: creatorHolds, previous: { ...prev, available: creatorTokensAvailable } } : null,
     findings,
     sources: { dexscreener: haveDex, rugcheck: haveRug },
   };

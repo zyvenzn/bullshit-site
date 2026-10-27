@@ -1,5 +1,5 @@
 .sc{min-height:100vh;background:var(--bg);color:var(--bone);font-family:var(--mono)}
-.sc__bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px var(--gutter);border-bottom:2px solid var(--crimson);background:rgba(10,6,5,.92);position:sticky;top:0;z-index:5}
+.sc__bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px var(--gutter);border-bottom:2px solid var(--crimson);background:var(--bg);position:sticky;top:0;z-index:5}
 .sc__logo{display:inline-flex;align-items:center;gap:10px;font:400 1.5rem/1 var(--display);letter-spacing:.04em;color:var(--bone);text-decoration:none}
 .sc__back{font:700 .7rem/1 var(--mono);letter-spacing:.14em;color:var(--bone-dim);text-decoration:none}
 .sc__back:hover{color:var(--red)}
@@ -66,3 +66,6 @@
 .sc__foot{display:flex;justify-content:center;gap:22px;padding:24px var(--gutter);border-top:2px solid var(--crimson)}
 .sc__foot a{font:700 .7rem/1 var(--mono);letter-spacing:.16em;color:var(--bone-dim);text-decoration:none}
 .sc__foot a:hover{color:var(--red)}
+.sc__id{display:flex;align-items:center;gap:14px}
+.sc__logo-img{width:56px;height:56px;object-fit:cover;border:2px solid var(--bone);background:var(--panel);flex:none}
+.sc__note{margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--brown);color:var(--bone-dim);font-size:.78rem;line-height:1.5}

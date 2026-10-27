@@ -27,8 +27,11 @@ export default async function handler(req, res) {
   };
 
   let ca = '';
+  let debug = false;
   try {
-    ca = String(req.query?.ca ?? new URL(req.url, 'http://x').searchParams.get('ca') ?? '').trim();
+    const q = new URL(req.url, 'http://x').searchParams;
+    ca = String(req.query?.ca ?? q.get('ca') ?? '').trim();
+    debug = (req.query?.debug ?? q.get('debug')) === '1';
   } catch {
     ca = '';
   }
@@ -53,5 +56,19 @@ export default async function handler(req, res) {
   }
 
   const result = analyze({ ca, pairs, rug, creatorPairs });
+  if (debug) {
+    // /api/scan?ca=...&debug=1 shows the shape of the RugCheck data (no secrets, all public) to help diagnose.
+    const ct = rug?.creatorTokens;
+    result.debug = {
+      rugKeys: rug ? Object.keys(rug) : null,
+      creatorTokens: {
+        type: Array.isArray(ct) ? 'array' : typeof ct,
+        length: Array.isArray(ct) ? ct.length : Array.isArray(ct?.tokens) ? ct.tokens.length : null,
+        sample: JSON.stringify(Array.isArray(ct) ? ct[0] ?? null : ct ?? null)?.slice(0, 400) ?? null,
+      },
+      mintsFound: mints.length,
+    };
+    return send(200, result);
+  }
   return send(200, result, 'public, s-maxage=30, stale-while-revalidate=120');
 }

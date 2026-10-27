@@ -30,9 +30,9 @@ const price = (n) => {
 const pct = (n) => (n === null || n === undefined ? null : `${n > 0 ? '+' : ''}${n.toFixed(1)}%`);
 const age = (hrs) => {
   if (hrs === null || hrs === undefined) return null;
-  if (hrs < 1) return `${Math.max(1, Math.round(hrs * 60))}m`;
-  if (hrs < 48) return `${Math.round(hrs)}h`;
-  return `${Math.round(hrs / 24)}d`;
+  if (hrs < 1) return `${Math.max(1, Math.round(hrs * 60))} min`;
+  if (hrs < 48) return `${Math.round(hrs)} hrs`;
+  return `${Math.round(hrs / 24)} days`;
 };
 const short = (a) => (a && a.length > 10 ? `${a.slice(0, 4)}\u2026${a.slice(-4)}` : a || '');
 const tone = (lvl) => (lvl < 20 ? 0 : lvl < 40 ? 1 : lvl < 60 ? 2 : lvl < 80 ? 3 : 4);
@@ -58,7 +58,8 @@ function Meter(r) {
     h('div', { className: 'sc__verdict' },
       h('img', { src: avatar, width: 44, height: 44, alt: '', decoding: 'async' }),
       h('p', null, '\u201C', r.verdict, '\u201D')
-    )
+    ),
+    r.note ? h('p', { className: 'sc__note' }, r.note) : null
   );
 }
 
@@ -105,7 +106,7 @@ function Creator(r) {
   if (!c) return null;
   const p = c.previous;
   let line = 'Bull could not load this creator\u2019s history.';
-  if (p.total === 0) line = 'No earlier tokens found for this creator.';
+  if (p.total === 0) line = p.available ? 'No earlier tokens found for this creator.' : 'The data source did not provide this creator\u2019s history, so Bull could not check it.';
   else if (p.known) line = `${p.total} earlier token${p.total > 1 ? 's' : ''}: ${p.alive} alive, ${p.dead} dead (under $2K liquidity).`;
   else line = `${p.total} earlier token${p.total > 1 ? 's' : ''} found, status unknown.`;
   return h('section', { className: 'sc__card' },
@@ -130,9 +131,22 @@ function Result(r, onCopy, copied) {
   const buys = m && m.buys24h !== null && m.sells24h !== null ? `${m.buys24h} / ${m.sells24h}` : null;
   return h('div', { className: 'sc__result' },
     h('header', { className: 'sc__head' },
-      h('div', null,
-        h('h2', null, r.symbol ? `$${r.symbol}` : 'UNKNOWN TOKEN'),
-        h('p', { className: 'sc__muted' }, r.name || '', r.name ? ' \u2022 ' : '', short(r.ca))
+      h('div', { className: 'sc__id' },
+        m && m.image
+          ? h('img', {
+              className: 'sc__logo-img',
+              src: m.image,
+              alt: '',
+              width: 56,
+              height: 56,
+              referrerPolicy: 'no-referrer',
+              onError: (e) => { e.currentTarget.style.display = 'none'; },
+            })
+          : null,
+        h('div', null,
+          h('h2', null, r.symbol ? `$${r.symbol}` : 'UNKNOWN TOKEN'),
+          h('p', { className: 'sc__muted' }, r.name || '', r.name ? ' \u2022 ' : '', short(r.ca))
+        )
       ),
       h('div', { className: 'sc__links' },
         m && m.url ? Ext({ href: m.url }, 'DEXSCREENER') : null,
