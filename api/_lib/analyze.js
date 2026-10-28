@@ -118,7 +118,7 @@ const GRADES = [
   ]],
 ];
 
-export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now = Date.now() }) {
+export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, creatorProfile = null, now = Date.now() }) {
   const seed = hash(ca);
   const pair = bestPair(pairs);
   const haveDex = !!pair;
@@ -135,6 +135,11 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
   const holders = topHolders(rug, excluded, creator);
   const mints = extractCreatorMints(rug, ca);
   const prev = previousTokens(mints, creatorPairs);
+  const prof = creatorProfile && typeof creatorProfile === 'object' ? creatorProfile : null;
+  const firstSeenMs = prof ? num(prof.firstSeenMs) : null;
+  const txCount = prof ? num(prof.txCount) : null;
+  const capped = !!prof?.capped;
+  const walletAgeH = firstSeenMs !== null ? Math.max(0, (now - firstSeenMs) / 36e5) : null;
   const creatorTokensAvailable = !!rug && rug.creatorTokens !== undefined && rug.creatorTokens !== null;
 
   const createdAt = num(pair?.pairCreatedAt);
@@ -293,6 +298,22 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
     });
   }
 
+  // creator wallet profile (only trustworthy when we saw the wallet's whole history)
+  if (walletAgeH !== null && !capped) {
+    const ageText = walletAgeH < 1 ? `${Math.max(1, Math.round(walletAgeH * 60))} minutes` : walletAgeH < 48 ? `${Math.round(walletAgeH)} hours` : `${Math.round(walletAgeH / 24)} days`;
+    if (walletAgeH < 24 && (txCount ?? 0) <= 5) {
+      add('wallet', 'warn', 10, `Creator wallet is brand new: ${ageText} old with ${txCount} transaction${txCount === 1 ? '' : 's'}.`, [
+        'A wallet with no past. Convenient.',
+      ]);
+    } else if (walletAgeH < 24 * 7) {
+      add('wallet', 'warn', 5, `Creator wallet is only ${ageText} old.`, ['Fresh wallet. Bull has seen fresh wallets before.']);
+    } else {
+      findings.push({ id: 'wallet', level: 'info', text: `Creator wallet is ${ageText} old with ${txCount} transactions.`, bull: null });
+    }
+  } else if (capped) {
+    findings.push({ id: 'wallet', level: 'info', text: 'Creator wallet is very active (1,000+ transactions).', bull: null });
+  }
+
   // RugCheck's own danger flags that we did not already count
   const covered = /holder|ownership|liquidity|\blp\b/i; // already scored above, do not count twice
   const dangers = rugRisks.filter((r) => r.level === 'danger' && !covered.test(r.name));
@@ -322,7 +343,14 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, now =
     market,
     security: { mintActive, freezeActive, lpLockedPct, rugged, totalHolders },
     holders: { top: holders.top, top10Pct: holders.top10Pct },
-    creator: creator ? { address: creator, holdsPct: creatorHolds, previous: { ...prev, available: creatorTokensAvailable } } : null,
+    creator: creator
+      ? {
+          address: creator,
+          holdsPct: creatorHolds,
+          previous: { ...prev, available: creatorTokensAvailable },
+          profile: prof ? { txCount, capped, firstSeenMs, ageHours: walletAgeH } : null,
+        }
+      : null,
     findings,
     sources: { dexscreener: haveDex, rugcheck: haveRug },
   };

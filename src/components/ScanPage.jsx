@@ -112,6 +112,11 @@ function Creator(r) {
   return h('section', { className: 'sc__card' },
     h('h3', null, 'THE CREATOR'),
     h('p', { className: 'sc__creator' }, 'Wallet ', wallet(c.address), c.holdsPct !== null && c.holdsPct !== undefined ? ` \u2022 holds ${c.holdsPct}% of supply` : ''),
+    c.profile && c.profile.ageHours !== null && c.profile.ageHours !== undefined && !c.profile.capped
+      ? h('p', { className: 'sc__muted' }, `Wallet age: ${age(c.profile.ageHours)} \u2022 ${c.profile.txCount} transaction${c.profile.txCount === 1 ? '' : 's'}`)
+      : c.profile && c.profile.capped
+        ? h('p', { className: 'sc__muted' }, 'Very active wallet (1,000+ transactions).')
+        : null,
     h('p', { className: 'sc__muted' }, line),
     p.list.length
       ? h('ul', { className: 'sc__prev' },

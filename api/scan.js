@@ -1,6 +1,7 @@
 // GET /api/scan?ca=<solana token mint>
 // Vercel serverless function. Needs no API keys: DexScreener and RugCheck have public endpoints.
 import { analyze, extractCreatorMints, isValidMint, toPairs } from './_lib/analyze.js';
+import { b58decode, toHex } from './_lib/b58.js';
 
 const HEADERS = { accept: 'application/json', 'user-agent': 'bullshit-detector/1.0' };
 
@@ -44,34 +45,29 @@ async function probeCreator(creator) {
   ];
   if (key) {
     jobs.push(
-      timed('helius', `https://api.helius.xyz/v0/addresses/${creator}/transactions?api-key=${key}&limit=50`, { headers: HEADERS }, (j) => {
+      timed('helius', `https://api.helius.xyz/v0/addresses/${creator}/transactions?api-key=${key}&limit=100`, { headers: HEADERS }, (j) => {
         const types = {};
         const sources = {};
         for (const x of Array.isArray(j) ? j : []) {
           types[x?.type] = (types[x?.type] || 0) + 1;
           sources[x?.source] = (sources[x?.source] || 0) + 1;
         }
-        // Compact samples of pump.fun transactions so we can see how a token creation looks.
-        const compact = (x) => ({
-          sig: String(x?.signature || '').slice(0, 14),
-          ts: x?.timestamp,
-          type: x?.type,
-          desc: String(x?.description || '').slice(0, 90),
-          keys: Object.keys(x || {}),
-          ix: (x?.instructions || []).slice(0, 6).map((i) => ({
-            program: i?.programId,
-            data: String(i?.data || '').slice(0, 24),
-            nAccounts: (i?.accounts || []).length,
-            first: (i?.accounts || []).slice(0, 3),
-            inner: (i?.innerInstructions || []).length,
-          })),
-          tokenTransfers: (x?.tokenTransfers || []).slice(0, 3).map((tt) => ({ mint: tt?.mint, from: String(tt?.fromUserAccount || '').slice(0, 6), to: String(tt?.toUserAccount || '').slice(0, 6) })),
-          events: Object.keys(x?.events || {}),
-        });
+        // Histogram of pump.fun instruction discriminators (first 8 bytes). A token creation should show up
+        // as its own discriminator, ideally on transactions paid by the creator wallet.
+        const PUMP = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P';
         const list = Array.isArray(j) ? j : [];
-        const unknownPump = list.filter((x) => x?.source === 'PUMP_FUN' && x?.type === 'UNKNOWN').slice(0, 3).map(compact);
-        const swapPump = list.filter((x) => x?.source === 'PUMP_FUN' && x?.type === 'SWAP').slice(0, 1).map(compact);
-        return { count: Array.isArray(j) ? j.length : null, types, sources, samples: { unknownPump, swapPump } };
+        const disc = {};
+        for (const x of list) {
+          for (const ix of x?.instructions || []) {
+            if (ix?.programId !== PUMP) continue;
+            const bytes = b58decode(String(ix?.data || ''));
+            const k = bytes ? toHex(bytes) : 'undecodable';
+            const e = (disc[k] ||= { count: 0, paidByCreator: 0, firstAccount: ix?.accounts?.[0] ?? null, nAccounts: (ix?.accounts || []).length });
+            e.count++;
+            if (x?.feePayer === creator) e.paidByCreator++;
+          }
+        }
+        return { count: Array.isArray(j) ? j.length : null, types, sources, disc, oldestTs: list.length ? list[list.length - 1]?.timestamp ?? null : null };
       })
     );
   } else {
@@ -79,6 +75,41 @@ async function probeCreator(creator) {
   }
   await Promise.all(jobs);
   return out;
+}
+
+async function postJson(url, body, ms = 4500) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(url, { method: 'POST', headers: { ...HEADERS, 'content-type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// How old is the creator wallet and how active? Uses up to the last 1000 signatures.
+// If the wallet has 1000+ (capped) the age is only a lower bound, so the analysis ignores it.
+async function getCreatorProfile(creator) {
+  if (!isValidMint(creator)) return null;
+  const key = process.env.HELIUS_API_KEY;
+  const urls = [...(key ? [`https://mainnet.helius-rpc.com/?api-key=${key}`] : []), 'https://api.mainnet-beta.solana.com'];
+  for (const url of urls) {
+    const j = await postJson(url, { jsonrpc: '2.0', id: 1, method: 'getSignaturesForAddress', params: [creator, { limit: 1000 }] });
+    const list = j?.result;
+    if (!Array.isArray(list)) continue;
+    const times = list.map((x) => x?.blockTime).filter((v) => Number.isFinite(v));
+    return {
+      txCount: list.length,
+      capped: list.length >= 1000,
+      firstSeenMs: times.length ? Math.min(...times) * 1000 : null,
+      lastSeenMs: times.length ? Math.max(...times) * 1000 : null,
+    };
+  }
+  return null;
 }
 
 async function getJson(url, ms = 4500) {
@@ -130,12 +161,14 @@ export default async function handler(req, res) {
   // Earlier tokens by the same creator, checked for liquidity on DexScreener.
   let creatorPairs = null;
   const mints = extractCreatorMints(rug, ca);
-  if (mints.length) {
-    const prevDex = await getJson(`https://api.dexscreener.com/tokens/v1/solana/${mints.join(',')}`);
-    if (prevDex) creatorPairs = toPairs(prevDex);
-  }
+  const creatorAddr = typeof rug?.creator === 'string' ? rug.creator : null;
+  const [prevDex, creatorProfile] = await Promise.all([
+    mints.length ? getJson(`https://api.dexscreener.com/tokens/v1/solana/${mints.join(',')}`) : null,
+    creatorAddr ? getCreatorProfile(creatorAddr) : null,
+  ]);
+  if (prevDex) creatorPairs = toPairs(prevDex);
 
-  const result = analyze({ ca, pairs, rug, creatorPairs });
+  const result = analyze({ ca, pairs, rug, creatorPairs, creatorProfile });
   if (debug) {
     // /api/scan?ca=...&debug=1 shows the shape of the RugCheck data (no secrets, all public) to help diagnose.
     const ct = rug?.creatorTokens;
