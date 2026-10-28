@@ -51,7 +51,27 @@ async function probeCreator(creator) {
           types[x?.type] = (types[x?.type] || 0) + 1;
           sources[x?.source] = (sources[x?.source] || 0) + 1;
         }
-        return { count: Array.isArray(j) ? j.length : null, types, sources };
+        // Compact samples of pump.fun transactions so we can see how a token creation looks.
+        const compact = (x) => ({
+          sig: String(x?.signature || '').slice(0, 14),
+          ts: x?.timestamp,
+          type: x?.type,
+          desc: String(x?.description || '').slice(0, 90),
+          keys: Object.keys(x || {}),
+          ix: (x?.instructions || []).slice(0, 6).map((i) => ({
+            program: i?.programId,
+            data: String(i?.data || '').slice(0, 24),
+            nAccounts: (i?.accounts || []).length,
+            first: (i?.accounts || []).slice(0, 3),
+            inner: (i?.innerInstructions || []).length,
+          })),
+          tokenTransfers: (x?.tokenTransfers || []).slice(0, 3).map((tt) => ({ mint: tt?.mint, from: String(tt?.fromUserAccount || '').slice(0, 6), to: String(tt?.toUserAccount || '').slice(0, 6) })),
+          events: Object.keys(x?.events || {}),
+        });
+        const list = Array.isArray(j) ? j : [];
+        const unknownPump = list.filter((x) => x?.source === 'PUMP_FUN' && x?.type === 'UNKNOWN').slice(0, 3).map(compact);
+        const swapPump = list.filter((x) => x?.source === 'PUMP_FUN' && x?.type === 'SWAP').slice(0, 1).map(compact);
+        return { count: Array.isArray(j) ? j.length : null, types, sources, samples: { unknownPump, swapPump } };
       })
     );
   } else {
