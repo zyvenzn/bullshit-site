@@ -1,28 +1,23 @@
 // ─────────────────────────────────────────────────────────────
 //  BULLSHIT — single place to configure the live details.
-//  Nothing here is invented. Fill these in when they exist.
 // ─────────────────────────────────────────────────────────────
 export const SITE = {
   name: 'BULLSHIT',
   ticker: '$BULLSHIT',
   network: 'Solana',
 
-  // Launch immediately: 17:18 WIB, 29 Oct 2026
+  // Launch time: 29 Oct 2026, 17:18 WIB
   launchAt: '2026-10-29T10:18:00Z',
-  // Paste the real Solana contract address here once it exists.
-  // While empty: the token section shows "[CA COMING SOON]"
-  // and the COPY CA button stays disabled.
-  contractAddress: '',
+  contractAddress: 'BFFQuP2arzsxAGppkfuPgFwmQtoS1XoEF4Gqu6zdpump',
 
-  // Official trading / purchase link (e.g. the token's page on the DEX
-  // you launch on). While empty: BUY buttons scroll to the token section.
-  buyUrl: '',
+  // Official Pump.fun token page
+  buyUrl: 'https://pump.fun/BFFQuP2arzsxAGppkfuPgFwmQtoS1XoEF4Gqu6zdpump',
 
-  xHandle: '@BullShit_Solana',
-  xUrl: 'https://x.com/BullShit_Solana',
+  xHandle: '@BullShit_Ofc',
+  xUrl: 'https://x.com/BullShit_Ofc',
 
   // Official community group.
-  telegramUrl: 'https://t.me/bullshit_sol',
+  telegramUrl: 'https://t.me/bullshit_ofc',
 };
 
 export const CA_PLACEHOLDER = '[CA COMING SOON]';
