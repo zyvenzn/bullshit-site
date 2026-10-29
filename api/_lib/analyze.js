@@ -278,7 +278,11 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, creat
   // creator history
   if (prev.known && prev.total > 0) {
     const ratio = prev.dead / prev.total;
-    if (prev.total >= 3 && ratio >= 0.6) {
+    if (prev.total >= 4 && ratio >= 0.8) {
+      add('history', 'bad', 45, `Serial launcher: ${prev.dead} of ${prev.total} earlier tokens from this creator have no real liquidity left.`, [
+        'Bull has seen this wallet\u2019s graveyard. It is crowded.',
+      ]);
+    } else if (prev.total >= 3 && ratio >= 0.6) {
       add('history', 'bad', 25, `Creator launched ${prev.total} earlier tokens. ${prev.dead} of them have no real liquidity left.`, [
         'Consistency is a virtue. This is the other kind.',
       ]);
@@ -326,7 +330,11 @@ export function analyze({ ca, pairs = [], rug = null, creatorPairs = null, creat
   score = clamp(Math.round(score), 0, 100);
   if (rugged) score = 100;
   if (dead) score = Math.max(score, 95);
-  const [, grade, verdicts] = GRADES.find(([max]) => score < max);
+  let [, grade, verdicts] = GRADES.find(([max]) => score < max);
+  if (score < 20 && findings.some((f) => f.level === 'warn' || f.level === 'bad')) {
+    grade = 'MINOR FLAGS';
+    verdicts = ['A few flags, nothing loud. Bull is still watching.', 'Mostly fine. Bull noticed a few things anyway.'];
+  }
 
   const order = { bad: 0, warn: 1, info: 2, ok: 3 };
   findings.sort((a, b) => order[a.level] - order[b.level]);

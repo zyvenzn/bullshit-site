@@ -156,6 +156,7 @@ function Result(r, onCopy, copied) {
       h('div', { className: 'sc__links' },
         m && m.url ? Ext({ href: m.url }, 'DEXSCREENER') : null,
         Ext({ href: `https://solscan.io/token/${r.ca}` }, 'SOLSCAN'),
+        Ext({ href: `https://app.bubblemaps.io/sol/token/${r.ca}` }, 'BUBBLEMAP'),
         h('button', { type: 'button', onClick: onCopy }, copied ? 'COPIED' : 'COPY LINK')
       )
     ),
